@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0b0f1c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WorkDay">
+<meta name="description" content="Track your hourly office progress like a pro">
+<title>WorkDay — Hourly Tracker</title>
+
+<!-- PWA Manifest inline -->
+<script>
+const manifestData = {
+  name: "WorkDay — Hourly Tracker",
+  short_name: "WorkDay",
+  description: "Track your hourly office progress",
+  start_url: "./",
+  display: "standalone",
+  background_color: "#0b0f1c",
+  theme_color: "#0b0f1c",
+  orientation: "portrait",
+  icons: [
+    { src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%230b0f1c'/><rect x='40' y='56' width='112' height='10' rx='5' fill='%234f8ef7'/><rect x='40' y='80' width='80' height='10' rx='5' fill='%23334155'/><rect x='40' y='104' width='96' height='10' rx='5' fill='%23334155'/><rect x='40' y='128' width='64' height='10' rx='5' fill='%23334155'/><circle cx='152' cy='136' r='28' fill='%2322c55e'/><text x='152' y='143' text-anchor='middle' font-size='22' fill='white' font-family='sans-serif'>✓</text></svg>", sizes: "192x192", type: "image/svg+xml" },
+    { src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%230b0f1c'/><rect x='100' y='140' width='312' height='28' rx='8' fill='%234f8ef7'/><rect x='100' y='200' width='220' height='24' rx='8' fill='%23334155'/><rect x='100' y='256' width='260' height='24' rx='8' fill='%23334155'/><rect x='100' y='312' width='180' height='24' rx='8' fill='%23334155'/><circle cx='412' cy='360' r='72' fill='%2322c55e'/><text x='412' y='378' text-anchor='middle' font-size='56' fill='white' font-family='sans-serif'>✓</text></svg>", sizes: "512x512", type: "image/svg+xml" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+const manifestURL = URL.createObjectURL(blob);
+document.write('<link rel="manifest" href="' + manifestURL + '">');
+</script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+:root{
+  --bg:#0b0f1c;
+  --surface:#131927;
+  --surface2:#1a2235;
+  --surface3:#1f2a3d;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.12);
+  --accent:#4f8ef7;
+  --accent2:#7c3aed;
+  --green:#22c55e;
+  --green-dim:rgba(34,197,94,0.12);
+  --amber:#f59e0b;
+  --amber-dim:rgba(245,158,11,0.12);
+  --red:#ef4444;
+  --red-dim:rgba(239,68,68,0.12);
+  --purple:#a78bfa;
+  --purple-dim:rgba(167,139,250,0.12);
+  --text:#e8f0fe;
+  --text2:#6b7f99;
+  --text3:#374151;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Plus Jakarta Sans',sans-serif;
+  --r:14px;
+  --r2:8px;
+  --safe-bottom:env(safe-area-inset-bottom,16px);
+}
+
+html,body{
+  height:100%;
+  background:var(--bg);
+  font-family:var(--sans);
+  color:var(--text);
+  overflow:hidden;
+}
+
+/* ── APP SHELL ── */
+#app{
+  height:100%;
+  max-width:430px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  overflow:hidden;
+}
+
+/* ── VIEWS ── */
+.view{display:none;flex-direction:column;flex:1;overflow:hidden}
+.view.active{display:flex}
+
+/* ── STATUS BAR ── */
+.statusbar{
+  padding:10px 20px 4px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--text2);
+  flex-shrink:0;
+}
+
+/* ── TOP BAR ── */
+.topbar{
+  padding:6px 16px 12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+}
+.topbar-logo{
+  width:36px;height:36px;
+  border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.topbar-logo svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round}
+.topbar-info{flex:1}
+.topbar-title{font-size:16px;font-weight:800;letter-spacing:-.3px}
+.topbar-date{font-size:11px;color:var(--text2);font-family:var(--mono);margin-top:1px}
+.icon-btn{
+  width:36px;height:36px;border-radius:var(--r2);
+  background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;
+  transition:.15s;
+}
+.icon-btn:active{transform:scale(.93)}
+.icon-btn svg{width:16px;height:16px;fill:none;stroke:var(--text2);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── DAY PROGRESS HERO ── */
+.hero{
+  margin:0 16px 12px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px 18px;
+  position:relative;
+  overflow:hidden;
+  flex-shrink:0;
+}
+.hero::before{
+  content:'';position:absolute;
+  top:-40px;right:-40px;
+  width:140px;height:140px;
+  background:radial-gradient(circle,rgba(79,142,247,.1),transparent 70%);
+  pointer-events:none;
+}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start}
+.hero-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text2);font-family:var(--mono)}
+.hero-hours{font-size:28px;font-weight:800;font-family:var(--mono);color:var(--accent);letter-spacing:-1px}
+.hero-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.hero-right{text-align:right}
+.day-score{font-size:22px;font-weight:800;font-family:var(--mono)}
+.day-score-label{font-size:10px;color:var(--text2);letter-spacing:.5px}
+.progress-track{
+  height:6px;background:rgba(255,255,255,0.06);
+  border-radius:6px;margin-top:12px;overflow:hidden;
+}
+.progress-fill{
+  height:100%;border-radius:6px;
+  background:linear-gradient(90deg,var(--accent),var(--purple));
+  transition:width .5s ease;
+  position:relative;
+}
+.progress-fill::after{
+  content:'';position:absolute;right:0;top:0;
+  width:6px;height:6px;border-radius:50%;
+  background:#fff;box-shadow:0 0 8px var(--accent);
+}
+.hero-stats{display:flex;gap:16px;margin-top:10px}
+.hstat{flex:1;text-align:center}
+.hstat-val{font-size:14px;font-weight:700;font-family:var(--mono)}
+.hstat-label{font-size:10px;color:var(--text2);letter-spacing:.3px}
+
+/* ── CATEGORY CHIPS ── */
+.chip-row{
+  padding:0 16px 10px;
+  display:flex;gap:8px;overflow-x:auto;flex-shrink:0;
+}
+.chip-row::-webkit-scrollbar{display:none}
+.chip{
+  padding:5px 13px;border-radius:20px;
+  font-size:12px;font-weight:600;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text2);cursor:pointer;white-space:nowrap;
+  transition:.15s;flex-shrink:0;
+}
+.chip:active{transform:scale(.95)}
+.chip.active{color:#fff;border-color:transparent}
+
+/* ── SCROLL AREA ── */
+.scroll-area{flex:1;overflow-y:auto;padding:0 16px;padding-bottom:90px}
+.scroll-area::-webkit-scrollbar{display:none}
+
+/* ── SECTION HEADER ── */
+.section-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:8px;margin-top:4px;
+}
+.section-title{font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text2)}
+.section-action{font-size:12px;color:var(--accent);cursor:pointer;font-weight:600}
+
+/* ── HOUR BLOCK ── */
+.hour-block{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  margin-bottom:8px;
+  overflow:hidden;
+  transition:.2s;
+  animation:slideIn .3s ease both;
+}
+.hour-block:active{transform:scale(.99)}
+.hour-block.active-block{border-color:var(--accent);box-shadow:0 0 0 1px rgba(79,142,247,.2)}
+
+@keyframes slideIn{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.hour-header{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 14px;cursor:pointer;
+}
+.time-pill{
+  padding:3px 10px;border-radius:20px;
+  font-size:11px;font-weight:600;font-family:var(--mono);
+  background:var(--surface2);color:var(--text2);
+  white-space:nowrap;flex-shrink:0;
+}
+.hour-title{flex:1;font-size:13px;font-weight:600;min-width:0}
+.hour-title.empty{color:var(--text3);font-weight:400;font-style:italic}
+.hour-cat-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+.hour-status{flex-shrink:0}
+.status-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--text3);
+}
+.status-dot.done{background:var(--green)}
+.status-dot.progress{background:var(--amber);animation:pulse 1.5s infinite}
+.status-dot.blocked{background:var(--red)}
+
+@keyframes pulse{
+  0%,100%{opacity:1}50%{opacity:.4}
+}
+
+.hour-body{
+  padding:0 14px 12px;
+  border-top:1px solid var(--border);
+  display:none;
+}
+.hour-body.open{display:block}
+.hour-notes{
+  font-size:12px;color:var(--text2);line-height:1.6;
+  margin-top:10px;font-family:var(--mono);
+}
+.hour-meta{
+  display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;
+}
+.meta-chip{
+  padding:3px 10px;border-radius:20px;
+  font-size:11px;font-weight:600;font-family:var(--mono);
+}
+.hour-actions{display:flex;gap:6px;margin-top:10px}
+.act-btn{
+  flex:1;padding:8px;border-radius:var(--r2);
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--text2);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:var(--sans);
+  transition:.15s;
+}
+.act-btn:active{transform:scale(.96)}
+.act-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.act-btn.danger{color:var(--red);border-color:var(--red-dim)}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(11,15,28,.95);
+  backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  padding:10px 0 calc(var(--safe-bottom));
+  display:flex;
+  z-index:50;
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;gap:3px;cursor:pointer;
+  padding:4px 0;transition:.15s;
+}
+.nav-item:active{transform:scale(.92)}
+.nav-icon{
+  width:22px;height:22px;
+  display:flex;align-items:center;justify-content:center;
+}
+.nav-icon svg{width:20px;height:20px;fill:none;stroke:var(--text3);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:.2s}
+.nav-label{font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.3px;transition:.2s}
+.nav-item.active .nav-icon svg{stroke:var(--accent)}
+.nav-item.active .nav-label{color:var(--accent)}
+.nav-fab{
+  flex:1;display:flex;justify-content:center;align-items:center;cursor:pointer;
+}
+.fab{
+  width:50px;height:50px;border-radius:16px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(79,142,247,.4);
+  transition:.15s;
+}
+.fab:active{transform:scale(.92)}
+.fab svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round}
+
+/* ── ADD / EDIT SHEET ── */
+.bottom-sheet{
+  position:absolute;inset:0;z-index:100;
+  display:none;
+}
+.sheet-overlay{
+  position:absolute;inset:0;
+  background:rgba(0,0,0,.7);
+  backdrop-filter:blur(4px);
+}
+.sheet-card{
+  position:absolute;bottom:0;left:0;right:0;
+  background:var(--surface);
+  border-radius:24px 24px 0 0;
+  border:1px solid var(--border2);
+  border-bottom:none;
+  padding:20px 18px calc(var(--safe-bottom) + 16px);
+  max-height:92vh;
+  overflow-y:auto;
+}
+.sheet-handle{
+  width:40px;height:3px;border-radius:3px;
+  background:var(--border2);margin:0 auto 18px;
+}
+.sheet-title{font-size:18px;font-weight:800;margin-bottom:4px}
+.sheet-sub{font-size:12px;color:var(--text2);font-family:var(--mono);margin-bottom:20px}
+.form-group{margin-bottom:14px}
+.form-label{
+  font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--text2);font-family:var(--mono);font-weight:600;
+  display:block;margin-bottom:6px;
+}
+.form-input,.form-select,.form-textarea{
+  width:100%;background:var(--surface2);
+  border:1px solid var(--border);border-radius:var(--r2);
+  padding:11px 14px;font-size:13px;color:var(--text);
+  font-family:var(--sans);outline:none;
+  -webkit-appearance:none;appearance:none;
+  transition:.15s;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(79,142,247,.1);
+}
+.form-textarea{resize:none;height:80px;font-family:var(--mono);font-size:12px;line-height:1.6}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--text3)}
+.form-select option{background:var(--surface2)}
+.form-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Time hour picker */
+.time-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+}
+.time-opt{
+  padding:8px 4px;border-radius:var(--r2);
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--text2);font-size:12px;font-family:var(--mono);
+  text-align:center;cursor:pointer;transition:.15s;
+}
+.time-opt:active{transform:scale(.95)}
+.time-opt.selected{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.time-opt.used{opacity:.35;cursor:default}
+
+/* Cat selector */
+.cat-grid{display:flex;gap:6px;flex-wrap:wrap}
+.cat-opt{
+  padding:6px 12px;border-radius:20px;
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--text2);font-size:12px;font-weight:600;
+  cursor:pointer;transition:.15s;
+}
+.cat-opt.selected{color:#fff;border-color:transparent}
+
+/* Status selector */
+.status-row{display:flex;gap:6px}
+.st-opt{
+  flex:1;padding:8px;border-radius:var(--r2);
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--text2);font-size:12px;font-weight:600;
+  text-align:center;cursor:pointer;transition:.15s;
+}
+.st-opt.selected{color:#fff;border-color:transparent}
+
+.sheet-btn-row{display:flex;gap:8px;margin-top:8px}
+.sheet-btn{
+  flex:1;padding:14px;border-radius:var(--r);
+  border:none;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:var(--sans);transition:.15s;
+}
+.sheet-btn:active{transform:scale(.97)}
+.sheet-btn-primary{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;box-shadow:0 4px 16px rgba(79,142,247,.3);
+}
+.sheet-btn-secondary{
+  background:var(--surface2);color:var(--text2);
+  border:1px solid var(--border);
+}
+
+/* ── STATS VIEW ── */
+.stats-scroll{flex:1;overflow-y:auto;padding:0 16px 90px}
+.stats-scroll::-webkit-scrollbar{display:none}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px;
+}
+.stat-card-label{font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--text2);font-family:var(--mono)}
+.stat-card-val{font-size:22px;font-weight:800;font-family:var(--mono);margin-top:4px}
+.stat-card-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.cat-bar-section{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px;margin-bottom:10px;
+}
+.cat-bar-item{margin-bottom:10px}
+.cat-bar-label{display:flex;justify-content:space-between;margin-bottom:5px}
+.cat-bar-name{font-size:12px;font-weight:600}
+.cat-bar-count{font-size:11px;color:var(--text2);font-family:var(--mono)}
+.cat-track{height:5px;background:rgba(255,255,255,.06);border-radius:5px;overflow:hidden}
+.cat-fill{height:100%;border-radius:5px;transition:width .6s ease}
+
+/* ── HISTORY VIEW ── */
+.history-scroll{flex:1;overflow-y:auto;padding:0 16px 90px}
+.history-scroll::-webkit-scrollbar{display:none}
+.day-group{margin-bottom:14px}
+.day-group-header{
+  font-size:11px;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--text2);font-family:var(--mono);
+  margin-bottom:8px;
+  display:flex;justify-content:space-between;
+}
+.history-row{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r2);padding:10px 12px;
+  display:flex;align-items:center;gap:10px;margin-bottom:6px;
+}
+.history-time{font-size:11px;font-family:var(--mono);color:var(--text2);flex-shrink:0;width:60px}
+.history-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.history-text{flex:1;font-size:13px;font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-cat{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0;font-family:var(--mono)}
+
+/* ── EXPORT VIEW ── */
+.export-scroll{flex:1;overflow-y:auto;padding:0 16px 90px}
+.export-scroll::-webkit-scrollbar{display:none}
+.export-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px 16px;
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:10px;cursor:pointer;transition:.15s;
+}
+.export-card:active{transform:scale(.98);background:var(--surface2)}
+.export-icon-box{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.export-info{flex:1}
+.export-title{font-size:14px;font-weight:700}
+.export-desc{font-size:12px;color:var(--text2);font-family:var(--mono);margin-top:1px}
+.export-arrow{color:var(--text3);font-size:18px}
+.preview-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px;margin-bottom:10px;
+  font-family:var(--mono);font-size:11px;color:var(--text2);
+  line-height:1.8;max-height:160px;overflow-y:auto;
+  white-space:pre-wrap;word-break:break-all;
+}
+
+/* ── TOAST ── */
+.toast{
+  position:absolute;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);
+  background:var(--surface3);border:1px solid var(--border2);
+  color:var(--text);padding:10px 18px;
+  border-radius:20px;font-size:12px;font-weight:600;font-family:var(--mono);
+  opacity:0;transition:.25s;pointer-events:none;white-space:nowrap;z-index:200;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── EMPTY STATE ── */
+.empty-state{
+  text-align:center;padding:40px 20px;color:var(--text2);
+}
+.empty-icon{font-size:36px;margin-bottom:12px}
+.empty-title{font-size:16px;font-weight:700;margin-bottom:6px;color:var(--text)}
+.empty-sub{font-size:13px;line-height:1.5}
+
+/* ── CATEGORY CONFIG ── */
+.CATS_COLORS {--a: ''} /* JS driven */
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══════════ TODAY VIEW ═══════════ -->
+  <div class="view active" id="view-today">
+    <div class="statusbar">
+      <span id="sb-time">--:--</span>
+      <span>WorkDay</span>
+    </div>
+    <div class="topbar">
+      <div class="topbar-logo">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div class="topbar-info">
+        <div class="topbar-title">WorkDay</div>
+        <div class="topbar-date" id="topbar-date">--</div>
+      </div>
+      <button class="icon-btn" onclick="exportQuick()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+    </div>
+
+    <div class="hero" id="hero"></div>
+
+    <div class="chip-row" id="chip-row"></div>
+
+    <div class="scroll-area">
+      <div class="section-header">
+        <span class="section-title">Today's Hours</span>
+        <span class="section-action" onclick="openAdd(null)">+ Add</span>
+      </div>
+      <div id="hours-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ STATS VIEW ═══════════ -->
+  <div class="view" id="view-stats">
+    <div class="statusbar">
+      <span id="sb-time2">--:--</span>
+      <span>Analytics</span>
+    </div>
+    <div class="topbar">
+      <div class="topbar-info" style="padding-left:4px">
+        <div class="topbar-title">Analytics</div>
+        <div class="topbar-date" id="stats-date">Today's breakdown</div>
+      </div>
+    </div>
+    <div class="stats-scroll" id="stats-content"></div>
+  </div>
+
+  <!-- ═══════════ HISTORY VIEW ═══════════ -->
+  <div class="view" id="view-history">
+    <div class="statusbar">
+      <span id="sb-time3">--:--</span>
+      <span>History</span>
+    </div>
+    <div class="topbar">
+      <div class="topbar-info" style="padding-left:4px">
+        <div class="topbar-title">History</div>
+        <div class="topbar-date" id="hist-count">All entries</div>
+      </div>
+    </div>
+    <div class="history-scroll" id="history-content"></div>
+  </div>
+
+  <!-- ═══════════ EXPORT VIEW ═══════════ -->
+  <div class="view" id="view-export">
+    <div class="statusbar">
+      <span id="sb-time4">--:--</span>
+      <span>Export</span>
+    </div>
+    <div class="topbar">
+      <div class="topbar-info" style="padding-left:4px">
+        <div class="topbar-title">Export</div>
+        <div class="topbar-date">Download your data</div>
+      </div>
+    </div>
+    <div class="export-scroll" id="export-content"></div>
+  </div>
+
+  <!-- ═══════════ BOTTOM NAV ═══════════ -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="nav-today" onclick="switchView('today')">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <span class="nav-label">Today</span>
+    </div>
+    <div class="nav-item" id="nav-stats" onclick="switchView('stats')">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </div>
+      <span class="nav-label">Stats</span>
+    </div>
+    <div class="nav-fab">
+      <div class="fab" onclick="openAdd(null)">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+    </div>
+    <div class="nav-item" id="nav-history" onclick="switchView('history')">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4.2"/><polyline points="3 3 3 7 7 7"/></svg>
+      </div>
+      <span class="nav-label">History</span>
+    </div>
+    <div class="nav-item" id="nav-export" onclick="switchView('export')">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+      <span class="nav-label">Export</span>
+    </div>
+  </nav>
+
+  <!-- ═══════════ ADD/EDIT SHEET ═══════════ -->
+  <div class="bottom-sheet" id="add-sheet">
+    <div class="sheet-overlay" onclick="closeSheet()"></div>
+    <div class="sheet-card">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="sheet-title">Log Hour</div>
+      <div class="sheet-sub" id="sheet-sub">Record what you worked on</div>
+
+      <div class="form-group">
+        <label class="form-label">Time Slot</label>
+        <div class="time-grid" id="time-grid"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Task / Activity</label>
+        <input class="form-input" id="f-task" placeholder="What are you working on?" maxlength="80">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <div class="cat-grid" id="cat-grid"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <div class="status-row" id="status-row"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notes (optional)</label>
+        <textarea class="form-textarea" id="f-notes" placeholder="Details, blockers, links..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Progress %</label>
+        <input type="range" id="f-progress" min="0" max="100" step="5" value="100"
+          style="width:100%;accent-color:var(--accent)" oninput="document.getElementById('progress-val').textContent=this.value+'%'">
+        <div style="text-align:right;font-size:12px;font-family:var(--mono);color:var(--accent);margin-top:4px" id="progress-val">100%</div>
+      </div>
+
+      <div class="sheet-btn-row">
+        <button class="sheet-btn sheet-btn-secondary" onclick="closeSheet()">Cancel</button>
+        <button class="sheet-btn sheet-btn-primary" onclick="saveEntry()">Save Entry</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
+const CATS = [
+  {id:'dev',    label:'Dev',       color:'#4f8ef7', bg:'rgba(79,142,247,.12)'},
+  {id:'meeting',label:'Meeting',   color:'#a78bfa', bg:'rgba(167,139,250,.12)'},
+  {id:'review', label:'Review',    color:'#22c55e', bg:'rgba(34,197,94,.12)'},
+  {id:'design', label:'Design',    color:'#f472b6', bg:'rgba(244,114,182,.12)'},
+  {id:'research',label:'Research', color:'#f59e0b', bg:'rgba(245,158,11,.12)'},
+  {id:'admin',  label:'Admin',     color:'#94a3b8', bg:'rgba(148,163,184,.12)'},
+  {id:'break',  label:'Break',     color:'#64748b', bg:'rgba(100,116,139,.12)'},
+  {id:'other',  label:'Other',     color:'#e2e8f0', bg:'rgba(226,232,240,.12)'},
+];
+
+const STATUSES = [
+  {id:'done',     label:'Done',      color:'#22c55e', bg:'rgba(34,197,94,.15)'},
+  {id:'progress', label:'In Progress',color:'#f59e0b',bg:'rgba(245,158,11,.15)'},
+  {id:'blocked',  label:'Blocked',   color:'#ef4444', bg:'rgba(239,68,68,.15)'},
+  {id:'pending',  label:'Pending',   color:'#94a3b8', bg:'rgba(148,163,184,.15)'},
+];
+
+const HOURS = [];
+for(let h=7;h<=20;h++){
+  const ampm=h<12?'AM':h===12?'PM':'PM';
+  const h12=h>12?h-12:h;
+  HOURS.push({val:h, label:`${h12}:00 ${ampm}`});
+}
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let entries = JSON.parse(localStorage.getItem('workday_entries')||'[]');
+let editingId = null;
+let filterCat = 'all';
+let selectedHour = null;
+let selectedCat = 'dev';
+let selectedStatus = 'done';
+let currentView = 'today';
+let expandedBlock = null;
+
+function todayKey(){return new Date().toISOString().slice(0,10)}
+function todayEntries(){return entries.filter(e=>e.date===todayKey())}
+function save(){localStorage.setItem('workday_entries',JSON.stringify(entries))}
+function catById(id){return CATS.find(c=>c.id===id)||CATS[CATS.length-1]}
+function statusById(id){return STATUSES.find(s=>s.id===id)||STATUSES[0]}
+
+// ═══════════════════════════════════════
+// TIME
+// ═══════════════════════════════════════
+function updateTime(){
+  const now=new Date();
+  const t=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
+  ['sb-time','sb-time2','sb-time3','sb-time4'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=t;
+  });
+  const dateStr=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const d=document.getElementById('topbar-date');
+  if(d) d.textContent=dateStr;
+}
+setInterval(updateTime,30000);
+updateTime();
+
+// ═══════════════════════════════════════
+// VIEW SWITCHING
+// ═══════════════════════════════════════
+function switchView(v){
+  currentView=v;
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  const navEl=document.getElementById('nav-'+v);
+  if(navEl) navEl.classList.add('active');
+  if(v==='stats') renderStats();
+  if(v==='history') renderHistory();
+  if(v==='export') renderExport();
+  if(v==='today') renderToday();
+}
+
+// ═══════════════════════════════════════
+// HERO
+// ═══════════════════════════════════════
+function renderHero(){
+  const today=todayEntries();
+  const worked=today.filter(e=>e.status!=='pending').length;
+  const total=HOURS.length;
+  const pct=Math.round((worked/total)*100);
+  const done=today.filter(e=>e.status==='done').length;
+  const blocked=today.filter(e=>e.status==='blocked').length;
+  const inprog=today.filter(e=>e.status==='progress').length;
+  const totalProg=today.reduce((s,e)=>s+(e.progress||100),0);
+  const avgProg=today.length?Math.round(totalProg/today.length):0;
+  document.getElementById('hero').innerHTML=`
+    <div class="hero-top">
+      <div>
+        <div class="hero-label">Hours Logged</div>
+        <div class="hero-hours">${worked}<span style="font-size:16px;color:var(--text2)">/${total}</span></div>
+        <div class="hero-sub">${today.length?`Avg progress: ${avgProg}%`:'Tap + to start logging'}</div>
+      </div>
+      <div class="hero-right">
+        <div class="day-score" style="color:${pct>70?'var(--green)':pct>40?'var(--amber)':'var(--red)'}">${pct}%</div>
+        <div class="day-score-label">DAY FILLED</div>
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-val" style="color:var(--green)">${done}</div><div class="hstat-label">Done</div></div>
+      <div class="hstat"><div class="hstat-val" style="color:var(--amber)">${inprog}</div><div class="hstat-label">In Prog</div></div>
+      <div class="hstat"><div class="hstat-val" style="color:var(--red)">${blocked}</div><div class="hstat-label">Blocked</div></div>
+      <div class="hstat"><div class="hstat-val" style="color:var(--accent)">${today.length}</div><div class="hstat-label">Entries</div></div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════
+// CHIPS
+// ═══════════════════════════════════════
+function renderChips(){
+  const today=todayEntries();
+  const row=document.getElementById('chip-row');
+  row.innerHTML=`<div class="chip ${filterCat==='all'?'active':''}" style="${filterCat==='all'?'background:var(--accent);':''}color:${filterCat==='all'?'#fff':''}" onclick="setFilter('all')">All</div>`+
+  CATS.map(c=>{
+    const count=today.filter(e=>e.cat===c.id).length;
+    if(count===0&&filterCat!==c.id) return '';
+    const active=filterCat===c.id;
+    return `<div class="chip ${active?'active':''}" style="${active?`background:${c.color};border-color:${c.color};color:#fff`:''}" onclick="setFilter('${c.id}')">${c.label}${count?` · ${count}`:''}</div>`;
+  }).join('');
+}
+function setFilter(cat){filterCat=cat;renderToday()}
+
+// ═══════════════════════════════════════
+// HOUR BLOCKS
+// ═══════════════════════════════════════
+function renderHourBlocks(){
+  const today=todayEntries();
+  const filtered=filterCat==='all'?today:today.filter(e=>e.cat===filterCat);
+  const usedHours=new Set(today.map(e=>e.hour));
+  const now=new Date().getHours();
+
+  let html='';
+
+  // Show logged entries
+  const toShow=filterCat==='all'
+    ? [...HOURS.filter(h=>usedHours.has(h.val)), ...HOURS.filter(h=>!usedHours.has(h.val)&&h.val<=now+1)]
+    : HOURS.filter(h=>filtered.some(e=>e.hour===h.val));
+
+  if(toShow.length===0){
+    html=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No entries yet</div><div class="empty-sub">Tap + to log your first hour</div></div>`;
+  } else {
+    toShow.forEach(h=>{
+      const entry=today.find(e=>e.hour===h.val);
+      const isNow=h.val===now;
+      const open=expandedBlock===h.val;
+      if(entry){
+        const cat=catById(entry.cat);
+        const st=statusById(entry.status);
+        html+=`
+        <div class="hour-block ${isNow?'active-block':''}" style="animation-delay:${toShow.indexOf(h)*0.04}s">
+          <div class="hour-header" onclick="toggleBlock(${h.val})">
+            <div class="time-pill">${h.label}</div>
+            <div class="hour-cat-dot" style="background:${cat.color}"></div>
+            <div class="hour-title">${entry.task}</div>
+            <div class="status-dot ${entry.status}"></div>
+          </div>
+          <div class="hour-body ${open?'open':''}">
+            <div class="hour-meta">
+              <span class="meta-chip" style="background:${cat.bg};color:${cat.color}">${cat.label}</span>
+              <span class="meta-chip" style="background:${st.bg};color:${st.color}">${st.label}</span>
+              <span class="meta-chip" style="background:rgba(255,255,255,.06);color:var(--text2)">${entry.progress||100}%</span>
+            </div>
+            ${entry.notes?`<div class="hour-notes">${entry.notes}</div>`:''}
+            <div class="hour-actions">
+              <button class="act-btn danger" onclick="deleteEntry('${entry.id}')">Delete</button>
+              <button class="act-btn" onclick="openAdd(${h.val})">Edit</button>
+              <button class="act-btn primary" onclick="markDone('${entry.id}')">✓ Done</button>
+            </div>
+          </div>
+        </div>`;
+      } else {
+        html+=`
+        <div class="hour-block" style="opacity:.5;animation-delay:${toShow.indexOf(h)*0.04}s" onclick="openAdd(${h.val})">
+          <div class="hour-header">
+            <div class="time-pill">${h.label}</div>
+            <div class="hour-title empty">Tap to log...</div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+        </div>`;
+      }
+    });
+  }
+  document.getElementById('hours-list').innerHTML=html;
+}
+
+function toggleBlock(hour){
+  expandedBlock=expandedBlock===hour?null:hour;
+  renderHourBlocks();
+}
+
+function renderToday(){
+  renderHero();
+  renderChips();
+  renderHourBlocks();
+}
+
+// ═══════════════════════════════════════
+// ADD / EDIT SHEET
+// ═══════════════════════════════════════
+function openAdd(hour){
+  editingId=null;
+  const today=todayEntries();
+  const usedHours=new Set(today.map(e=>e.hour));
+
+  if(hour!==null){
+    const existing=today.find(e=>e.hour===hour);
+    if(existing){
+      editingId=existing.id;
+      selectedHour=hour;
+      selectedCat=existing.cat;
+      selectedStatus=existing.status;
+      document.getElementById('f-task').value=existing.task;
+      document.getElementById('f-notes').value=existing.notes||'';
+      document.getElementById('f-progress').value=existing.progress||100;
+      document.getElementById('progress-val').textContent=(existing.progress||100)+'%';
+      document.getElementById('sheet-title').textContent='Edit Entry';
+      document.getElementById('sheet-sub').textContent=`Editing ${HOURS.find(h=>h.val===hour)?.label}`;
+    } else {
+      selectedHour=hour;
+      document.getElementById('f-task').value='';
+      document.getElementById('f-notes').value='';
+      document.getElementById('f-progress').value=100;
+      document.getElementById('progress-val').textContent='100%';
+      document.getElementById('sheet-title').textContent='Log Hour';
+      document.getElementById('sheet-sub').textContent='Record what you worked on';
+    }
+  } else {
+    const nowH=new Date().getHours();
+    selectedHour=usedHours.has(nowH)?null:nowH;
+    document.getElementById('f-task').value='';
+    document.getElementById('f-notes').value='';
+    document.getElementById('f-progress').value=100;
+    document.getElementById('progress-val').textContent='100%';
+    document.getElementById('sheet-title').textContent='Log Hour';
+    document.getElementById('sheet-sub').textContent='Record what you worked on';
+  }
+
+  // Build time grid
+  document.getElementById('time-grid').innerHTML=HOURS.map(h=>{
+    const used=usedHours.has(h.val)&&h.val!==selectedHour;
+    return `<div class="time-opt ${selectedHour===h.val?'selected':''} ${used&&!editingId?'used':''}"
+      onclick="${used&&!editingId?'':`selectHour(${h.val})`}">${h.label}</div>`;
+  }).join('');
+
+  // Build cat grid
+  document.getElementById('cat-grid').innerHTML=CATS.map(c=>
+    `<div class="cat-opt ${selectedCat===c.id?'selected':''}"
+      style="${selectedCat===c.id?`background:${c.color};border-color:${c.color};color:#fff`:''}"
+      onclick="selectCat('${c.id}')">${c.label}</div>`
+  ).join('');
+
+  // Build status row
+  document.getElementById('status-row').innerHTML=STATUSES.map(s=>
+    `<div class="st-opt ${selectedStatus===s.id?'selected':''}"
+      style="${selectedStatus===s.id?`background:${s.bg};border-color:${s.color};color:${s.color}`:''}"
+      onclick="selectStatus('${s.id}')">${s.label}</div>`
+  ).join('');
+
+  document.getElementById('add-sheet').style.display='block';
+  setTimeout(()=>document.getElementById('f-task').focus(),300);
+}
+
+function selectHour(h){
+  selectedHour=h;
+  document.querySelectorAll('.time-opt').forEach((el,i)=>{
+    const hv=HOURS[i].val;
+    el.classList.toggle('selected',hv===h);
+  });
+}
+
+function selectCat(id){
+  selectedCat=id;
+  document.querySelectorAll('.cat-opt').forEach(el=>{
+    const c=CATS.find(c=>el.textContent===c.label);
+    if(!c) return;
+    const active=c.id===id;
+    el.className='cat-opt'+(active?' selected':'');
+    el.style.cssText=active?`background:${c.color};border-color:${c.color};color:#fff`:'';
+  });
+}
+
+function selectStatus(id){
+  selectedStatus=id;
+  document.querySelectorAll('.st-opt').forEach(el=>{
+    const s=STATUSES.find(s=>el.textContent===s.label);
+    if(!s) return;
+    const active=s.id===id;
+    el.className='st-opt'+(active?' selected':'');
+    el.style.cssText=active?`background:${s.bg};border-color:${s.color};color:${s.color}`:'';
+  });
+}
+
+function closeSheet(){
+  document.getElementById('add-sheet').style.display='none';
+}
+
+function saveEntry(){
+  const task=document.getElementById('f-task').value.trim();
+  if(!task){showToast('Enter a task description');return;}
+  if(selectedHour===null){showToast('Select a time slot');return;}
+  const progress=parseInt(document.getElementById('f-progress').value);
+  const notes=document.getElementById('f-notes').value.trim();
+
+  if(editingId){
+    const idx=entries.findIndex(e=>e.id===editingId);
+    if(idx>=0) entries[idx]={...entries[idx],task,cat:selectedCat,status:selectedStatus,progress,notes};
+  } else {
+    entries.push({
+      id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+      date:todayKey(),
+      hour:selectedHour,
+      task,cat:selectedCat,status:selectedStatus,progress,notes,
+      ts:Date.now()
+    });
+  }
+  save();
+  closeSheet();
+  expandedBlock=null;
+  renderToday();
+  showToast(editingId?'Entry updated':'Hour logged ✓');
+}
+
+function deleteEntry(id){
+  if(!confirm('Delete this entry?')) return;
+  entries=entries.filter(e=>e.id!==id);
+  save();expandedBlock=null;renderToday();showToast('Deleted');
+}
+
+function markDone(id){
+  const e=entries.find(e=>e.id===id);
+  if(e){e.status='done';e.progress=100;}
+  save();renderToday();showToast('Marked done ✓');
+}
+
+// ═══════════════════════════════════════
+// STATS VIEW
+// ═══════════════════════════════════════
+function renderStats(){
+  const today=todayEntries();
+  const worked=today.length;
+  const done=today.filter(e=>e.status==='done').length;
+  const blocked=today.filter(e=>e.status==='blocked').length;
+  const avgProg=worked?Math.round(today.reduce((s,e)=>s+(e.progress||100),0)/worked):0;
+
+  // Cat breakdown
+  const catCounts={};
+  CATS.forEach(c=>{catCounts[c.id]=today.filter(e=>e.cat===c.id).length});
+  const maxCount=Math.max(...Object.values(catCounts),1);
+
+  let html=`
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-card-label">Hours Logged</div><div class="stat-card-val" style="color:var(--accent)">${worked}</div><div class="stat-card-sub">of ${HOURS.length} slots</div></div>
+      <div class="stat-card"><div class="stat-card-label">Avg Progress</div><div class="stat-card-val" style="color:var(--green)">${avgProg}%</div><div class="stat-card-sub">across tasks</div></div>
+      <div class="stat-card"><div class="stat-card-label">Done</div><div class="stat-card-val" style="color:var(--green)">${done}</div><div class="stat-card-sub">completed</div></div>
+      <div class="stat-card"><div class="stat-card-label">Blocked</div><div class="stat-card-val" style="color:var(--red)">${blocked}</div><div class="stat-card-sub">need attention</div></div>
+    </div>
+    <div class="cat-bar-section">
+      <div class="section-title" style="margin-bottom:14px">By Category</div>
+      ${CATS.map(c=>{
+        const count=catCounts[c.id];
+        if(count===0) return '';
+        return `<div class="cat-bar-item">
+          <div class="cat-bar-label">
+            <span class="cat-bar-name" style="color:${c.color}">${c.label}</span>
+            <span class="cat-bar-count">${count}h</span>
+          </div>
+          <div class="cat-track"><div class="cat-fill" style="width:${Math.round((count/maxCount)*100)}%;background:${c.color}"></div></div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+
+  // Status breakdown
+  const stCounts={};
+  STATUSES.forEach(s=>{stCounts[s.id]=today.filter(e=>e.status===s.id).length});
+  html+=`<div class="cat-bar-section">
+    <div class="section-title" style="margin-bottom:14px">By Status</div>
+    ${STATUSES.map(s=>{
+      const count=stCounts[s.id];
+      if(!count) return '';
+      return `<div class="cat-bar-item">
+        <div class="cat-bar-label">
+          <span class="cat-bar-name" style="color:${s.color}">${s.label}</span>
+          <span class="cat-bar-count">${count}</span>
+        </div>
+        <div class="cat-track"><div class="cat-fill" style="width:${Math.round((count/worked)*100)}%;background:${s.color}"></div></div>
+      </div>`;
+    }).join('')}
+  </div>`;
+
+  document.getElementById('stats-content').innerHTML=html||'<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">No data yet</div><div class="empty-sub">Log your first hour to see analytics</div></div>';
+}
+
+// ═══════════════════════════════════════
+// HISTORY VIEW
+// ═══════════════════════════════════════
+function renderHistory(){
+  const sorted=[...entries].sort((a,b)=>b.ts-a.ts);
+  const grouped={};
+  sorted.forEach(e=>{
+    if(!grouped[e.date]) grouped[e.date]=[];
+    grouped[e.date].push(e);
+  });
+  document.getElementById('hist-count').textContent=`${entries.length} total entries`;
+  if(!sorted.length){
+    document.getElementById('history-content').innerHTML='<div class="empty-state"><div class="empty-icon">🕐</div><div class="empty-title">No history yet</div><div class="empty-sub">Your logged hours will appear here</div></div>';
+    return;
+  }
+  let html='';
+  Object.keys(grouped).sort((a,b)=>b.localeCompare(a)).forEach(date=>{
+    const d=new Date(date+'T12:00:00');
+    const label=d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+    const dayEntries=grouped[date].sort((a,b)=>a.hour-b.hour);
+    html+=`<div class="day-group">
+      <div class="day-group-header"><span>${label}</span><span>${dayEntries.length} hrs</span></div>
+      ${dayEntries.map(e=>{
+        const cat=catById(e.cat);
+        const h=HOURS.find(h=>h.val===e.hour);
+        return `<div class="history-row">
+          <div class="history-time">${h?.label||e.hour+':00'}</div>
+          <div class="history-dot" style="background:${cat.color}"></div>
+          <div class="history-text">${e.task}</div>
+          <div class="history-cat" style="background:${cat.bg};color:${cat.color}">${cat.label}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  });
+  document.getElementById('history-content').innerHTML=html;
+}
+
+// ═══════════════════════════════════════
+// EXPORT VIEW
+// ═══════════════════════════════════════
+function renderExport(){
+  const todayRows=todayEntries();
+  const preview=todayRows.slice(0,3).map(e=>`${e.date} ${e.hour}:00 | ${e.task} | ${e.cat} | ${e.status} | ${e.progress||100}%`).join('\n')+(todayRows.length>3?`\n...+${todayRows.length-3} more rows`:'');
+  document.getElementById('export-content').innerHTML=`
+    <div class="section-header" style="margin-bottom:12px"><span class="section-title">Export Options</span><span class="badge" style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;font-family:var(--mono);color:var(--text2)">${entries.length} total</span></div>
+    <div class="export-card" onclick="doExport('csv')">
+      <div class="export-icon-box" style="background:rgba(34,197,94,.12)">📊</div>
+      <div class="export-info"><div class="export-title">CSV — Today</div><div class="export-desc">Excel, Google Sheets ready</div></div>
+      <div class="export-arrow">›</div>
+    </div>
+    <div class="export-card" onclick="doExport('csv-all')">
+      <div class="export-icon-box" style="background:rgba(34,197,94,.08)">📈</div>
+      <div class="export-info"><div class="export-title">CSV — All History</div><div class="export-desc">${entries.length} entries across all days</div></div>
+      <div class="export-arrow">›</div>
+    </div>
+    <div class="export-card" onclick="doExport('json')">
+      <div class="export-icon-box" style="background:rgba(79,142,247,.12)">{ }</div>
+      <div class="export-info"><div class="export-title">JSON</div><div class="export-desc">Structured, API-ready format</div></div>
+      <div class="export-arrow">›</div>
+    </div>
+    <div class="export-card" onclick="doExport('md')">
+      <div class="export-icon-box" style="background:rgba(167,139,250,.12)">📝</div>
+      <div class="export-info"><div class="export-title">Markdown Report</div><div class="export-desc">Daily standup / meeting notes</div></div>
+      <div class="export-arrow">›</div>
+    </div>
+    <div class="export-card" onclick="doExport('clip')">
+      <div class="export-icon-box" style="background:rgba(245,158,11,.12)">⎘</div>
+      <div class="export-info"><div class="export-title">Copy to Clipboard</div><div class="export-desc">Today's entries as plain text</div></div>
+      <div class="export-arrow">›</div>
+    </div>
+    ${todayRows.length?`<div class="section-title" style="margin-bottom:8px;margin-top:4px">Preview</div><div class="preview-box">${preview||'No entries today'}</div>`:''}
+    <div class="export-card" onclick="clearAll()" style="border-color:var(--red-dim)">
+      <div class="export-icon-box" style="background:var(--red-dim)">🗑</div>
+      <div class="export-info"><div class="export-title" style="color:var(--red)">Clear All Data</div><div class="export-desc">Permanently delete all entries</div></div>
+      <div class="export-arrow">›</div>
+    </div>
+  `;
+}
+
+function doExport(type){
+  const todayRows=todayEntries().sort((a,b)=>a.hour-b.hour);
+  const allRows=[...entries].sort((a,b)=>a.date.localeCompare(b.date)||a.hour-b.hour);
+  const headers=['Date','Hour','Time','Task','Category','Status','Progress','Notes'];
+  const toCSVRow=e=>{
+    const h=HOURS.find(h=>h.val===e.hour);
+    return [e.date,e.hour,h?.label||e.hour+':00',`"${e.task}"`,e.cat,e.status,e.progress||100,`"${(e.notes||'').replace(/"/g,'""')}"`].join(',');
+  };
+
+  if(type==='csv'){
+    const csv=[headers.join(','),...todayRows.map(toCSVRow)].join('\n');
+    download('workday-today.csv',csv,'text/csv');
+    showToast('CSV downloaded');
+  } else if(type==='csv-all'){
+    const csv=[headers.join(','),...allRows.map(toCSVRow)].join('\n');
+    download('workday-all.csv',csv,'text/csv');
+    showToast('CSV downloaded');
+  } else if(type==='json'){
+    download('workday.json',JSON.stringify(allRows,null,2),'application/json');
+    showToast('JSON downloaded');
+  } else if(type==='md'){
+    const date=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    let md=`# Daily Work Log — ${date}\n\n`;
+    md+=`**Hours logged:** ${todayRows.length} | **Completed:** ${todayRows.filter(e=>e.status==='done').length}\n\n---\n\n`;
+    todayRows.forEach(e=>{
+      const h=HOURS.find(h=>h.val===e.hour);
+      const cat=catById(e.cat);
+      md+=`### ${h?.label} — ${e.task}\n`;
+      md+=`- **Category:** ${cat.label}\n- **Status:** ${e.status}\n- **Progress:** ${e.progress||100}%\n`;
+      if(e.notes) md+=`- **Notes:** ${e.notes}\n`;
+      md+='\n';
+    });
+    download('workday-report.md',md,'text/markdown');
+    showToast('Markdown downloaded');
+  } else if(type==='clip'){
+    const text=todayRows.map(e=>{
+      const h=HOURS.find(h=>h.val===e.hour);
+      return `${h?.label}: ${e.task} [${e.status}]${e.notes?' — '+e.notes:''}`;
+    }).join('\n');
+    navigator.clipboard.writeText(text||'No entries today').then(()=>showToast('Copied!'));
+  }
+}
+
+function exportQuick(){doExport('clip')}
+
+function clearAll(){
+  if(!confirm('Delete ALL entries? This cannot be undone.')) return;
+  entries=[];save();renderToday();renderExport();showToast('All data cleared');
+}
+
+function download(name,content,type){
+  const blob=new Blob([content],{type});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=name;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+// ═══════════════════════════════════════
+// SERVICE WORKER (PWA)
+// ═══════════════════════════════════════
+if('serviceWorker' in navigator){
+  const swCode=`
+const CACHE='workday-v1';
+const ASSETS=['/'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
+self.addEventListener('fetch',e=>e.respondWith(
+  caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>new Response('Offline',{status:503})))
+));
+self.addEventListener('activate',e=>e.waitUntil(
+  caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
+));
+  `;
+  const swBlob=new Blob([swCode],{type:'application/javascript'});
+  const swURL=URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swURL).catch(()=>{});
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+renderToday();
+
+// Add sample data if empty
+if(entries.length===0){
+  const now=new Date().getHours();
+  const samples=[
+    {task:'Morning standup & planning',cat:'meeting',status:'done',progress:100,notes:'Discussed sprint goals',hour:9},
+    {task:'Fix auth bug — JWT refresh',cat:'dev',status:'done',progress:100,notes:'Merged PR #142',hour:10},
+    {task:'Design review — dashboard v2',cat:'review',status:'done',progress:100,notes:'',hour:11},
+    {task:'Feature: CSV export module',cat:'dev',status:'progress',progress:70,notes:'Need to handle edge cases',hour:now>12?13:0},
+  ].filter(s=>s.hour>0&&s.hour<=now);
+  samples.forEach(s=>{
+    entries.push({...s,id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),date:todayKey(),ts:Date.now()-Math.random()*3600000});
+  });
+  save();
+  renderToday();
+}
+</script>
+</body>
+</html>

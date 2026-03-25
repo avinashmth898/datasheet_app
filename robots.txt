@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# WorkDay — Hourly Office Tracker
+# Single-page PWA — no crawlable content
+Disallow: /sw.js
